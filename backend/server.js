@@ -22,7 +22,7 @@ app.use("/api/rooms", roomRoutes);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "https://swipemood.vercel.app"],
+    origin: ["http://localhost:3000", "https://swipe-mood.vercel.app/"],
     methods: ["GET", "POST"],
   },
 });
