@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import ReactPlayer from "react-player";
+import ReactPlayer from "react-player/youtube"; // ✅ Explicit YouTube import
 import "./Room.css";
 
-const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA"; 
+const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA";
 
 export default function Room() {
   const { roomCode } = useParams();
@@ -14,26 +14,24 @@ export default function Room() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("everyone");
 
-  const [videoUrl, setVideoUrl] = useState(""); 
-  const [currentUrl, setCurrentUrl] = useState(""); 
-  const [playing, setPlaying] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [currentUrl, setCurrentUrl] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [ready, setReady] = useState(false);
 
   const playerRef = useRef(null);
-
-  const userName = localStorage.getItem("userName");
   const userRole = localStorage.getItem("userRole");
 
+  // Load room
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/rooms/${roomCode}`);
+        const res = await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load room");
         setRoom(data.room);
       } catch (err) {
-        console.warn("Room load error (non-fatal here):", err?.message || err);
-        setError(err.message || "");
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -41,99 +39,73 @@ export default function Room() {
     fetchRoom();
   }, [roomCode]);
 
-  function extractYoutubeId(urlOrText) {
-    if (!urlOrText) return null;
+  function extractYoutubeId(input) {
+    if (!input) return null;
     try {
-      const url = new URL(urlOrText);
+      const url = new URL(input);
       if (url.hostname.includes("youtu")) {
-        const byPath = url.pathname.split("/").filter(Boolean);
-        if (url.hostname.includes("youtu.be") && byPath.length > 0) return byPath[0];
         const v = url.searchParams.get("v");
         if (v) return v;
+        const pathParts = url.pathname.split("/");
+        return pathParts[pathParts.length - 1];
       }
-    } catch (e) {
-    }
-
-    const regex = /(?:v=|\/)([0-9A-Za-z_-]{11})/;
-    const m = urlOrText.match(regex);
-    if (m && m[1]) return m[1];
-    return null;
-  }
-
-  function getInternalPlayer() {
-    try {
-      if (!playerRef.current) return null;
-      if (typeof playerRef.current.getInternalPlayer === "function") {
-        return playerRef.current.getInternalPlayer();
-      }
-      return playerRef.current.internalPlayer || null;
-    } catch {
-      return null;
-    }
+    } catch {}
+    const match = input.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+    return match ? match[1] : null;
   }
 
   const handlePlayOrSearch = async () => {
     const id = extractYoutubeId(videoUrl);
     if (id) {
-      const url = `https://www.youtube.com/watch?v=${id}`;
-      setCurrentUrl(url);
-      setPlaying(true);
-      setSearchResults([]);
+      const youtubeUrl = `https://www.youtube.com/watch?v=${id}`;
+      console.log("▶ Playing direct URL:", youtubeUrl);
+      setCurrentUrl("");
+      setTimeout(() => {
+        setCurrentUrl(youtubeUrl);
+      }, 100);
       return;
     }
 
-    if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA") {
-      alert("Please set your YouTube API key in Room.jsx (YOUTUBE_API_KEY).");
+    if (!YOUTUBE_API_KEY) {
+      alert("Missing YouTube API key!");
       return;
     }
 
     try {
       const q = encodeURIComponent(videoUrl);
       const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${q}&key=${YOUTUBE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${q}&key=${YOUTUBE_API_KEY}`
       );
       const data = await res.json();
-      if (!data.items) {
-        alert("No results from YouTube.");
-        return;
+
+      if (data.items && data.items.length > 0) {
+        setSearchResults(data.items);
+      } else {
+        alert("No results found.");
       }
-      setSearchResults(data.items);
     } catch (err) {
-      console.error("YouTube search error:", err);
+      console.error("YouTube search failed:", err);
       alert("YouTube search failed. Check console.");
     }
   };
 
   const handleSelectSuggestion = (video) => {
-    const videoId = (video?.id && (video.id.videoId || video.id)) || null;
+    const videoId = video?.id?.videoId || (typeof video?.id === "string" ? video.id : null);
     if (!videoId) {
-      alert("Invalid selection");
+      alert("Invalid video selected.");
       return;
     }
-    const url = `https://www.youtube.com/watch?v=${videoId}`;
-    setCurrentUrl(url);
-    setPlaying(true);
-    setSearchResults([]); 
-    setVideoUrl(video.snippet?.title || ""); 
-  };
 
-  const handlePlayerReady = () => {
-    const p = getInternalPlayer();
-    if (!p) return;
-    try {
-      if (typeof p.playVideo === "function") {
-        p.playVideo();
-      } else if (typeof p.play === "function") {
-        p.play();
-      }
-    } catch (err) {
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    console.log("▶ Playing:", youtubeUrl);
 
-    }
-  };
+    setCurrentUrl("");
+    setTimeout(() => {
+      setCurrentUrl(youtubeUrl);
+    }, 100);
 
-  const handlePlayerError = (e) => {
-    console.error("Player error:", e);
-    alert("Playback error occurred. See console for details.");
+    setSearchResults([]);
+    setVideoUrl(video.snippet?.title || "");
   };
 
   const handleUploadAudio = () => {
@@ -146,13 +118,12 @@ export default function Room() {
       const fd = new FormData();
       fd.append("track", file);
       try {
-        await fetch(`http://localhost:5000/api/rooms/${roomCode}/upload`, {
+        await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}/upload`, {
           method: "POST",
           body: fd,
         });
         alert("Upload successful");
-      } catch (err) {
-        console.error("Upload failed:", err);
+      } catch {
         alert("Upload failed");
       }
     };
@@ -160,16 +131,14 @@ export default function Room() {
   };
 
   const handleCloseRoom = async () => {
-    if (!window.confirm("Close room? This will delete the room from the server.")) return;
+    if (!window.confirm("Close room?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/${roomCode}`, {
+      await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Close failed");
       localStorage.removeItem("roomCode");
       navigate("/");
-    } catch (err) {
-      console.error("Close error:", err);
+    } catch {
       alert("Failed to close room");
     }
   };
@@ -205,32 +174,28 @@ export default function Room() {
 
         <div className="users-box">
           <div className="section-title">CONNECTED USERS</div>
-          {activeTab === "admins" ? (
-            admins.length ? (
-              admins.map((a, i) => (
+          {activeTab === "admins"
+            ? admins.length
+              ? admins.map((a, i) => (
+                  <div key={i} className="user-row">
+                    <div className="avatar">{a.name?.charAt(0)?.toUpperCase()}</div>
+                    <div className="meta">
+                      <div className="name">{a.name}</div>
+                      <div className="role">Admin</div>
+                    </div>
+                  </div>
+                ))
+              : <div className="no-users">No admins yet</div>
+            : everyone.length
+            ? everyone.map((u, i) => (
                 <div key={i} className="user-row">
-                  <div className="avatar">{a.name?.charAt(0)?.toUpperCase()}</div>
+                  <div className="avatar">{u.name?.charAt(0)?.toUpperCase()}</div>
                   <div className="meta">
-                    <div className="name">{a.name}</div>
-                    <div className="role">Admin</div>
+                    <div className="name">{u.name}</div>
                   </div>
                 </div>
               ))
-            ) : (
-              <div className="no-users">No admins yet</div>
-            )
-          ) : everyone.length ? (
-            everyone.map((u, i) => (
-              <div key={i} className="user-row">
-                <div className="avatar">{u.name?.charAt(0)?.toUpperCase()}</div>
-                <div className="meta">
-                  <div className="name">{u.name}</div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="no-users">No users yet</div>
-          )}
+            : <div className="no-users">No users yet</div>}
         </div>
 
         <div className="left-actions">
@@ -252,33 +217,24 @@ export default function Room() {
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="Paste YouTube link or search song..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handlePlayOrSearch();
-            }}
+            onKeyDown={(e) => e.key === "Enter" && handlePlayOrSearch()}
           />
-          <button className="search-go" onClick={handlePlayOrSearch}>
-            ▶
-          </button>
+          <button className="search-go" onClick={handlePlayOrSearch}>▶</button>
         </div>
 
         {searchResults.length > 0 && (
           <ul className="suggestions">
-            {searchResults.map((it) => {
-              const vid = it.id.videoId || it.id;
-              const title = it.snippet?.title || "";
-              const channel = it.snippet?.channelTitle || "";
-              return (
-                <li key={vid} onClick={() => handleSelectSuggestion(it)}>
-                  <div className="s-thumb">
-                    <img src={it.snippet?.thumbnails?.default?.url} alt={title} />
-                  </div>
-                  <div className="s-meta">
-                    <div className="s-title">{title}</div>
-                    <div className="s-channel">{channel}</div>
-                  </div>
-                </li>
-              );
-            })}
+            {searchResults.map((it) => (
+              <li key={it.id.videoId || it.id} onClick={() => handleSelectSuggestion(it)}>
+                <div className="s-thumb">
+                  <img src={it.snippet?.thumbnails?.default?.url} alt={it.snippet?.title} />
+                </div>
+                <div className="s-meta">
+                  <div className="s-title">{it.snippet?.title}</div>
+                  <div className="s-channel">{it.snippet?.channelTitle}</div>
+                </div>
+              </li>
+            ))}
           </ul>
         )}
 
@@ -286,14 +242,23 @@ export default function Room() {
           {currentUrl ? (
             <ReactPlayer
               ref={playerRef}
-              key={currentUrl}
               url={currentUrl}
-              playing={playing}
+              playing={true}
               controls
               width="100%"
               height="100%"
-              onReady={handlePlayerReady}
-              onError={handlePlayerError}
+              onReady={() => setReady(true)}
+              onError={(e) => console.error("❌ Player Error:", e)}
+              config={{
+                youtube: {
+                  playerVars: {
+                    autoplay: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    enablejsapi: 1,
+                  },
+                },
+              }}
             />
           ) : (
             <div className="no-video">No video selected</div>
@@ -306,7 +271,6 @@ export default function Room() {
         <div className="chat-area">
           <div className="no-messages">No messages yet</div>
         </div>
-
         <div className="chat-input-row">
           <input placeholder="Message..." />
           <button>Send</button>
