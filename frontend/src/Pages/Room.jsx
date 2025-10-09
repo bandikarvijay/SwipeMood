@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import ReactPlayer from "react-player/youtube"; // ✅ Explicit YouTube import
+import ReactPlayer from "react-player/youtube";
+import io from "socket.io-client";
 import "./Room.css";
 
+const socket = io("http://localhost:5000"); // ✅ your backend
 const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA";
 
 export default function Room() {
@@ -13,7 +15,6 @@ export default function Room() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("everyone");
-
   const [videoUrl, setVideoUrl] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -22,14 +23,19 @@ export default function Room() {
   const playerRef = useRef(null);
   const userRole = localStorage.getItem("userRole");
 
-  // Load room
+  // ✅ 1. Load room from backend
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`);
+        const res = await fetch(`http://localhost:5000/api/rooms/${roomCode}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load room");
         setRoom(data.room);
+
+        // Load current video if exists
+        if (data.room.currentVideo) {
+          setCurrentUrl(data.room.currentVideo);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -37,6 +43,20 @@ export default function Room() {
       }
     };
     fetchRoom();
+  }, [roomCode]);
+
+  // ✅ 2. Socket setup
+  useEffect(() => {
+    socket.emit("join-room", roomCode);
+
+    socket.on("sync-video", (url) => {
+      console.log("🎵 Syncing video:", url);
+      setCurrentUrl(url);
+    });
+
+    return () => {
+      socket.off("sync-video");
+    };
   }, [roomCode]);
 
   function extractYoutubeId(input) {
@@ -58,11 +78,7 @@ export default function Room() {
     const id = extractYoutubeId(videoUrl);
     if (id) {
       const youtubeUrl = `https://www.youtube.com/watch?v=${id}`;
-      console.log("▶ Playing direct URL:", youtubeUrl);
-      setCurrentUrl("");
-      setTimeout(() => {
-        setCurrentUrl(youtubeUrl);
-      }, 100);
+      playVideo(youtubeUrl);
       return;
     }
 
@@ -77,15 +93,36 @@ export default function Room() {
         `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${q}&key=${YOUTUBE_API_KEY}`
       );
       const data = await res.json();
-
-      if (data.items && data.items.length > 0) {
-        setSearchResults(data.items);
-      } else {
-        alert("No results found.");
-      }
+      if (data.items?.length > 0) setSearchResults(data.items);
+      else alert("No results found.");
     } catch (err) {
       console.error("YouTube search failed:", err);
       alert("YouTube search failed. Check console.");
+    }
+  };
+
+  // ✅ 3. Handle playing a video
+  const playVideo = async (youtubeUrl) => {
+    console.log("▶ Playing:", youtubeUrl);
+    setCurrentUrl("");
+    setTimeout(() => setCurrentUrl(youtubeUrl), 100);
+    setSearchResults([]);
+    setVideoUrl("");
+
+    // ✅ if admin, broadcast to others
+    if (userRole === "Admin") {
+      socket.emit("play-video", { roomCode, videoUrl: youtubeUrl });
+
+      // store current video in backend
+      try {
+        await fetch(`http://localhost:5000/api/rooms/${roomCode}/current`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoUrl: youtubeUrl }),
+        });
+      } catch (err) {
+        console.error("Failed to update room video:", err);
+      }
     }
   };
 
@@ -95,17 +132,8 @@ export default function Room() {
       alert("Invalid video selected.");
       return;
     }
-
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log("▶ Playing:", youtubeUrl);
-
-    setCurrentUrl("");
-    setTimeout(() => {
-      setCurrentUrl(youtubeUrl);
-    }, 100);
-
-    setSearchResults([]);
-    setVideoUrl(video.snippet?.title || "");
+    playVideo(youtubeUrl);
   };
 
   const handleUploadAudio = () => {
@@ -118,7 +146,7 @@ export default function Room() {
       const fd = new FormData();
       fd.append("track", file);
       try {
-        await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}/upload`, {
+        await fetch(`http://localhost:5000/api/rooms/${roomCode}/upload`, {
           method: "POST",
           body: fd,
         });
@@ -133,7 +161,7 @@ export default function Room() {
   const handleCloseRoom = async () => {
     if (!window.confirm("Close room?")) return;
     try {
-      await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`, {
+      await fetch(`http://localhost:5000/api/rooms/${roomCode}`, {
         method: "DELETE",
       });
       localStorage.removeItem("roomCode");
