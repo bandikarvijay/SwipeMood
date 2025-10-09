@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import ReactPlayer from "react-player";
 import "./Room.css";
 
-const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA"; 
+const YOUTUBE_API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA";
 
 export default function Room() {
   const { roomCode } = useParams();
