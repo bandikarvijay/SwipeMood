@@ -40,7 +40,7 @@ export default function CreateRoom() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/rooms", {
+      const res = await fetch("https://swipemood.onrender.com/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomCode, userName: name }),
@@ -68,7 +68,7 @@ export default function CreateRoom() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/rooms/join", {
+      const res = await fetch("https://swipemood.onrender.com/api/rooms/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomCode, userName: name }),
