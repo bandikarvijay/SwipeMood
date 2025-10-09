@@ -33,28 +33,27 @@ const currentVideos = {};
 io.on("connection", (socket) => {
   console.log("🟢 User connected:", socket.id);
 
-  // ✅ User joins a specific room
+  // ✅ Join a specific room
   socket.on("join-room", (roomCode) => {
     socket.join(roomCode);
     console.log(`👋 ${socket.id} joined room ${roomCode}`);
 
-    // Send current playing video if available
+    // Send current playing video to the new user
     if (currentVideos[roomCode]) {
-      console.log(`🔄 Sending current video to ${socket.id}:`, currentVideos[roomCode]);
+      console.log(`🔄 Syncing video for ${socket.id}:`, currentVideos[roomCode]);
       socket.emit("sync-video", currentVideos[roomCode]);
     }
   });
 
-  // ✅ Admin plays a video — broadcast to everyone
+  // ✅ When admin plays a new video
   socket.on("play-video", ({ roomCode, videoUrl }) => {
-    console.log(`🎵 Admin started playing in ${roomCode}: ${videoUrl}`);
+    console.log(`🎵 Admin played in ${roomCode}: ${videoUrl}`);
     currentVideos[roomCode] = videoUrl;
 
-    // Broadcast to all in room (except sender)
+    // Notify all users except sender
     socket.to(roomCode).emit("sync-video", videoUrl);
   });
 
-  // ✅ When someone disconnects
   socket.on("disconnect", () => {
     console.log("🔴 User disconnected:", socket.id);
   });
@@ -63,3 +62,4 @@ io.on("connection", (socket) => {
 server.listen(5000, () => {
   console.log("🚀 Server running on http://localhost:5000");
 });
+
