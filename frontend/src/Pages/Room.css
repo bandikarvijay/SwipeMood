@@ -1,0 +1,173 @@
+/* simple dark layout matching your UI */
+:root{
+  --bg: #0e0e0e;
+  --panel: #141414;
+  --muted: #8f8f8f;
+  --accent: #1ed760;
+  --danger: #e74c3c;
+  --card: #121212;
+  --border: rgba(255,255,255,0.04);
+}
+
+html,body,#root { height:100%; }
+.room-root{
+  display:flex;
+  height:100vh;
+  background:var(--bg);
+  color:#ddd;
+  font-family: Inter, Roboto, Arial, sans-serif;
+}
+
+/* LEFT */
+.left-panel{
+  width:280px;
+  background:var(--panel);
+  padding:18px;
+  box-sizing:border-box;
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.room-header h2{ margin:0 0 8px 0; font-size:20px;}
+.tabs{ display:flex; gap:8px; margin-bottom:8px;}
+.tab{
+  background:transparent;
+  color:var(--muted);
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.tab.active{
+  color:#fff;
+  border-bottom:3px solid var(--accent);
+  background:transparent;
+}
+
+.users-box{
+  background:transparent;
+  padding-top:4px;
+  flex:1;
+}
+.section-title{ font-weight:700; margin-bottom:12px; color:#fff; font-size:12px;}
+.user-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:8px 6px;
+  border-radius:6px;
+  margin-bottom:6px;
+  background:rgba(255,255,255,0.01);
+}
+.avatar{
+  width:36px;height:36px;border-radius:50%;background:#243028;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;
+}
+.meta .name{ font-size:14px; }
+.meta .role{ font-size:12px;color:var(--muted); }
+
+.left-actions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:8px;
+}
+.upload-btn{
+  background:linear-gradient(180deg,#07f27a,#02d86e);
+  color:#04211a;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:700;
+}
+.close-btn{
+  background:var(--danger);color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:700;
+}
+
+/* CENTER */
+.center-panel{
+  flex:1;
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+}
+.search-row{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:6px;
+}
+.search-input{
+  width:680px;
+  max-width:calc(100% - 80px);
+  background:var(--card);
+  border-radius:28px;
+  padding:14px 18px;
+  border:1px solid var(--border);
+  color:#ddd;
+  outline:none;
+}
+.search-go{
+  width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;color:#04211a;font-weight:700;cursor:pointer;
+}
+
+/* suggestions */
+.suggestions{
+  width:720px;
+  max-width:calc(100% - 40px);
+  background:#0f0f0f;
+  border-radius:8px;
+  list-style:none;
+  padding:8px;
+  margin:0 0 6px 0;
+  box-shadow:0 6px 24px rgba(0,0,0,0.6);
+}
+.suggestions li{
+  display:flex; gap:10px; align-items:center; padding:8px; cursor:pointer; border-radius:6px;
+}
+.suggestions li:hover{ background: rgba(255,255,255,0.02); }
+.s-thumb img{ width:64px; height:36px; object-fit:cover; border-radius:4px;}
+.s-meta .s-title{ font-size:13px; color:#fff; }
+.s-meta .s-channel{ font-size:12px; color:var(--muted); }
+
+/* video area */
+.video-wrapper{
+  width:760px;
+  height:420px;
+  max-width:calc(100% - 56px);
+  max-height:70vh;
+  background:#000;
+  border-radius:12px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+}
+.no-video{ color:var(--muted); }
+
+/* RIGHT */
+.right-panel{
+  width:320px;
+  background:var(--panel);
+  padding:18px;
+  box-sizing:border-box;
+  border-left:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.chat-title{ font-size:18px; font-weight:700; margin-bottom:8px;}
+.chat-area{
+  flex:1;
+  background:rgba(255,255,255,0.01);
+  border-radius:8px;
+  padding:12px;
+}
+.no-messages{ color:var(--muted); text-align:center; margin-top:40px;}
+
+.chat-input-row{ display:flex; gap:8px; margin-top:12px;}
+.chat-input-row input{ flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:#ddd;}
+.chat-input-row button{ background:var(--accent); border:none; padding:10px 14px; border-radius:8px; color:#04211a; font-weight:700; cursor:pointer;}
+
+/* loading / error */
+.loading, .error{ padding:20px; color:var(--muted); }

@@ -1,0 +1,183 @@
+/* General container styling */
+.create-room-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0b0b0b;
+  color: white;
+  font-family: "Inter", sans-serif;
+}
+
+/* Card box */
+.create-room-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 40px 50px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Small online indicator text */
+.listening-now {
+  color: #00ff88;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* Title */
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Subtitle */
+.subtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+/* Input fields */
+.input-field {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  font-size: 15px;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-field:focus {
+  border-color: #00ff88;
+}
+
+/* Error message */
+.error-text {
+  color: #ff5555;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* Button group */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* Join Room button */
+.join-btn {
+  background: #00ff88;
+  color: #000;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.join-btn:hover {
+  background: #00cc6e;
+}
+
+/* Create New Room button */
+.create-btn {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #333;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.create-btn:hover {
+  background: #222;
+  border-color: #00ff88;
+}
+
+/* Footer text */
+.footer-text {
+  color: #777;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* Footer links */
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.footer-link {
+  color: #888;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.footer-link:hover {
+  color: #00ff88;
+}
+
+.roomcode-boxes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.code-box {
+  width: 45px;
+  height: 55px;
+  text-align: center;
+  font-size: 24px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  outline: none;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.code-box:focus {
+  border-color: #ff4f81;
+  box-shadow: 0 0 5px rgba(255, 79, 129, 0.6);
+}
+
+.roomcode-boxes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.code-box {
+  width: 45px;
+  height: 55px;
+  text-align: center;
+  font-size: 24px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  outline: none;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.code-box:focus {
+  border-color: #ff4f81;
+  box-shadow: 0 0 5px rgba(255, 79, 129, 0.6);
+}
