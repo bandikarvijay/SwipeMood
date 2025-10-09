@@ -27,7 +27,7 @@ export default function Room() {
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/rooms/${roomCode}`);
+        const res = await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load room");
         setRoom(data.room);
@@ -146,7 +146,7 @@ export default function Room() {
       const fd = new FormData();
       fd.append("track", file);
       try {
-        await fetch(`http://localhost:5000/api/rooms/${roomCode}/upload`, {
+        await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}/upload`, {
           method: "POST",
           body: fd,
         });
@@ -162,7 +162,7 @@ export default function Room() {
   const handleCloseRoom = async () => {
     if (!window.confirm("Close room? This will delete the room from the server.")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/rooms/${roomCode}`, {
+      const res = await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Close failed");
