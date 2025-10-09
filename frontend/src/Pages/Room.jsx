@@ -4,7 +4,7 @@ import ReactPlayer from "react-player/youtube";
 import io from "socket.io-client";
 import "./Room.css";
 
-const socket = io("http://localhost:5000"); // ✅ your backend
+const socket = io("https://swipemood.onrender.com"); // ✅ your backend
 const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA";
 
 export default function Room() {
@@ -27,7 +27,7 @@ export default function Room() {
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/rooms/${roomCode}`);
+        const res = await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load room");
         setRoom(data.room);
@@ -115,7 +115,7 @@ export default function Room() {
 
       // store current video in backend
       try {
-        await fetch(`http://localhost:5000/api/rooms/${roomCode}/current`, {
+        await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}/current`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ videoUrl: youtubeUrl }),
@@ -146,7 +146,7 @@ export default function Room() {
       const fd = new FormData();
       fd.append("track", file);
       try {
-        await fetch(`http://localhost:5000/api/rooms/${roomCode}/upload`, {
+        await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}/upload`, {
           method: "POST",
           body: fd,
         });
@@ -161,7 +161,7 @@ export default function Room() {
   const handleCloseRoom = async () => {
     if (!window.confirm("Close room?")) return;
     try {
-      await fetch(`http://localhost:5000/api/rooms/${roomCode}`, {
+      await fetch(`https://swipemood.onrender.com/api/rooms/${roomCode}`, {
         method: "DELETE",
       });
       localStorage.removeItem("roomCode");
