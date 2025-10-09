@@ -82,10 +82,12 @@ export default function Room() {
       return;
     }
 
-    if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA") {
-      alert("Please set your YouTube API key in Room.jsx (YOUTUBE_API_KEY).");
-      return;
-    }
+if (!YOUTUBE_API_KEY) {
+  console.error("❌ Missing YouTube API key. Please set REACT_APP_YOUTUBE_API_KEY in your .env or Vercel.");
+  alert("YouTube API key missing. Please configure it in your environment variables.");
+  return;
+}
+
 
     try {
       const q = encodeURIComponent(videoUrl);
