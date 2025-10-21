@@ -7,6 +7,8 @@
   background: #0b0b0b;
   color: white;
   font-family: "Inter", sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* Card box */
@@ -16,8 +18,10 @@
   border-radius: 16px;
   padding: 40px 50px;
   width: 400px;
+  max-width: 90%;
   text-align: center;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
 }
 
 /* Small online indicator text */
@@ -120,7 +124,8 @@
 .footer-links {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .footer-link {
@@ -134,11 +139,13 @@
   color: #00ff88;
 }
 
+/* Room code input boxes */
 .roomcode-boxes {
   display: flex;
   justify-content: center;
   gap: 8px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .code-box {
@@ -158,26 +165,52 @@
   box-shadow: 0 0 5px rgba(255, 79, 129, 0.6);
 }
 
-.roomcode-boxes {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
+/* ✅ RESPONSIVE STYLING */
+@media (max-width: 600px) {
+  .create-room-card {
+    width: 100%;
+    padding: 25px 20px;
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .input-field {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .join-btn,
+  .create-btn {
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  .code-box {
+    width: 40px;
+    height: 50px;
+    font-size: 20px;
+  }
 }
 
-.code-box {
-  width: 45px;
-  height: 55px;
-  text-align: center;
-  font-size: 24px;
-  border: 2px solid #444;
-  border-radius: 8px;
-  outline: none;
-  text-transform: uppercase;
-  transition: 0.2s;
-}
+@media (max-width: 400px) {
+  .code-box {
+    width: 35px;
+    height: 45px;
+    font-size: 18px;
+  }
 
-.code-box:focus {
-  border-color: #ff4f81;
-  box-shadow: 0 0 5px rgba(255, 79, 129, 0.6);
+  .title {
+    font-size: 18px;
+  }
+
+  .create-room-card {
+    padding: 20px 15px;
+  }
 }
