@@ -1,10 +1,9 @@
-// backend/models/Room.js
 import mongoose from "mongoose";
 
-const trackSchema = new mongoose.Schema({
-  title: String,
-  path: String,
-  uploadedBy: String,
+const messageSchema = new mongoose.Schema({
+  userName: String,
+  text: String,
+  time: String,
 });
 
 const nowPlayingSchema = new mongoose.Schema({
@@ -17,7 +16,7 @@ const roomSchema = new mongoose.Schema({
   roomCode: { type: String, required: true, unique: true },
   admin: { type: String, required: true },
   everyone: { type: [String], default: [] },
-  tracks: { type: [trackSchema], default: [] },
+  messages: { type: [messageSchema], default: [] },
   nowPlaying: { type: nowPlayingSchema, default: () => ({}) },
 });
 
