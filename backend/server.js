@@ -1,4 +1,3 @@
-// backend/server.js
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -9,51 +8,43 @@ import Room from "./models/Room.js";
 
 const app = express();
 
-// ✅ CORS for front-end domains
+// ✅ CORS for frontend domains
 const allowedOrigins = [
-  "https://swipemood-sage.vercel.app", // your deployed frontend
+  "https://swipemood-sage.vercel.app", // deployed frontend
   "http://localhost:3000",             // local frontend
 ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-  })
-);
-
+app.use(cors({ origin: allowedOrigins, methods: ["GET", "POST"] }));
 app.use(express.json());
 
 // 🧠 MongoDB
 mongoose
-  .connect(
-    "mongodb+srv://SwipeMood:W9s1CmfegALiioYL@cluster0.jz2yyaw.mongodb.net/?retryWrites=true&w=majority"
-  )
+  .connect("mongodb+srv://SwipeMood:W9s1CmfegALiioYL@cluster0.jz2yyaw.mongodb.net/?retryWrites=true&w=majority")
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("MongoDB Error:", err));
 
 app.use("/api/rooms", roomRoutes);
 
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
+  transports: ["websocket"], // important for Render WebSocket support
 });
 
 // 🎵 In-memory caches
 const currentVideos = {};
-const roomChats = {}; // store chats temporarily
+const roomChats = {};
 
 io.on("connection", (socket) => {
   console.log("🟢 Socket connected:", socket.id);
 
   socket.on("join-room", async ({ roomCode, userName, userRole }) => {
     socket.join(roomCode);
-    console.log(`${userName} joined room ${roomCode} (${userRole})`);
 
-    // Fetch room and update members
     const room = await Room.findOne({ roomCode });
     if (room) {
       if (userName === room.admin) userRole = "Admin";
@@ -66,11 +57,9 @@ io.on("connection", (socket) => {
         { name: room.admin, role: "Admin" },
         ...room.everyone.map((n) => ({ name: n, role: "Everyone" })),
       ];
-
       io.to(roomCode).emit("user-joined", allUsers);
     }
 
-    // Send current video & chat history
     if (currentVideos[roomCode]) socket.emit("sync-video", currentVideos[roomCode]);
     if (roomChats[roomCode]) socket.emit("chat-history", roomChats[roomCode]);
   });
@@ -87,15 +76,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("close-room", async (roomCode) => {
-    try {
-      await Room.findOneAndDelete({ roomCode });
-      delete currentVideos[roomCode];
-      delete roomChats[roomCode];
-      io.to(roomCode).emit("room-closed");
-      console.log(`🗑️ Room ${roomCode} deleted by Admin`);
-    } catch (err) {
-      console.error("Delete room error:", err);
-    }
+    await Room.findOneAndDelete({ roomCode });
+    delete currentVideos[roomCode];
+    delete roomChats[roomCode];
+    io.to(roomCode).emit("room-closed");
   });
 
   socket.on("disconnect", () => {
@@ -103,8 +87,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ Use process.env.PORT for Render deployment
+// ✅ Use dynamic Render port
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Backend running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
