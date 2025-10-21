@@ -4,14 +4,8 @@ import ReactPlayer from "react-player/youtube";
 import io from "socket.io-client";
 import "./Room.css";
 
-// ✅ Socket.IO connection depending on environment
-const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://swipemood.onrender.com" // deployed backend
-    : "http://localhost:5000";         // local backend
-
-const socket = io(SOCKET_URL, { transports: ["websocket"] });
-
+// ✅ your backend Render domain
+const socket = io("https://swipemood.onrender.com");
 const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA";
 
 export default function Room() {
@@ -32,9 +26,11 @@ export default function Room() {
 
   const playerRef = useRef(null);
 
+  // 🧠 from local storage
   const userName = localStorage.getItem("userName");
   const userRole = localStorage.getItem("userRole");
 
+  // ✅ load room
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -54,15 +50,29 @@ export default function Room() {
     fetchRoom();
   }, [roomCode]);
 
+  // ✅ join socket room
   useEffect(() => {
     if (!userName || !roomCode) return;
 
     socket.emit("join-room", { roomCode, userName, userRole });
 
-    socket.on("user-joined", (list) => setUsers(list || []));
-    socket.on("sync-video", (url) => setCurrentUrl(url));
-    socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
-    socket.on("chat-history", (history) => setMessages(history));
+    socket.on("user-joined", (list) => {
+      setUsers(list || []);
+    });
+
+    socket.on("sync-video", (url) => {
+      console.log("🎵 Syncing video:", url);
+      setCurrentUrl(url);
+    });
+
+    socket.on("chat-message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on("chat-history", (history) => {
+      setMessages(history);
+    });
+
     socket.on("room-closed", () => {
       alert("Room closed by Admin");
       navigate("/");
@@ -77,6 +87,7 @@ export default function Room() {
     };
   }, [roomCode, userName, userRole, navigate]);
 
+  // ✅ parse YouTube links
   function extractYoutubeId(input) {
     if (!input) return null;
     try {
@@ -92,6 +103,7 @@ export default function Room() {
     return match ? match[1] : null;
   }
 
+  // ✅ play / search video
   const handlePlayOrSearch = async () => {
     const id = extractYoutubeId(videoUrl);
     if (id) {
@@ -119,11 +131,14 @@ export default function Room() {
     }
   };
 
+  // ✅ broadcast play to all
   const playVideo = (youtubeUrl) => {
+    console.log("▶ Playing:", youtubeUrl);
     setCurrentUrl("");
     setTimeout(() => setCurrentUrl(youtubeUrl), 100);
     setSearchResults([]);
     setVideoUrl("");
+
     if (userRole === "Admin") {
       socket.emit("play-video", { roomCode, videoUrl: youtubeUrl });
     }
@@ -136,16 +151,23 @@ export default function Room() {
       alert("Invalid video selected.");
       return;
     }
-    playVideo(`https://www.youtube.com/watch?v=${videoId}`);
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    playVideo(youtubeUrl);
   };
 
+  // ✅ chat send
   const sendMessage = () => {
     if (!chatInput.trim()) return;
-    const msg = { sender: userName, text: chatInput.trim(), time: new Date().toLocaleTimeString() };
+    const msg = {
+      sender: userName,
+      text: chatInput.trim(),
+      time: new Date().toLocaleTimeString(),
+    };
     socket.emit("chat-message", { roomCode, msg });
     setChatInput("");
   };
 
+  // ✅ Admin closes room
   const handleCloseRoom = () => {
     if (window.confirm("Are you sure you want to close this room?")) {
       socket.emit("close-room", roomCode);
@@ -170,62 +192,140 @@ export default function Room() {
             </button>
           )}
         </div>
+
         <div className="tabs">
-          <button className={activeTab === "everyone" ? "tab active" : "tab"} onClick={() => setActiveTab("everyone")}>Everyone</button>
-          <button className={activeTab === "admins" ? "tab active" : "tab"} onClick={() => setActiveTab("admins")}>Admins</button>
+          <button
+            className={activeTab === "everyone" ? "tab active" : "tab"}
+            onClick={() => setActiveTab("everyone")}
+          >
+            Everyone
+          </button>
+          <button
+            className={activeTab === "admins" ? "tab active" : "tab"}
+            onClick={() => setActiveTab("admins")}
+          >
+            Admins
+          </button>
         </div>
+
         <div className="users-box">
           <div className="section-title">CONNECTED USERS</div>
-          {activeTab === "admins" ? (
-            admins.length ? admins.map((a, i) => (
-              <div key={i} className="user-row">
-                <div className="avatar">{a.name?.charAt(0) || "A"}</div>
-                <div className="meta"><div className="name">{a.name}</div><div className="role">Admin</div></div>
-              </div>
-            )) : <div className="no-users">No admins yet</div>
-          ) : (
-            everyone.length ? everyone.map((u, i) => (
-              <div key={i} className="user-row">
-                <div className="avatar">{u.name?.charAt(0) || "U"}</div>
-                <div className="meta"><div className="name">{u.name}</div><div className="role">Everyone</div></div>
-              </div>
-            )) : <div className="no-users">No users yet</div>
-          )}
+          {activeTab === "admins"
+            ? admins.length
+              ? admins.map((a, i) => (
+                  <div key={i} className="user-row">
+                    <div className="avatar">{a.name?.charAt(0) || "A"}</div>
+                    <div className="meta">
+                      <div className="name">{a.name}</div>
+                      <div className="role">Admin</div>
+                    </div>
+                  </div>
+                ))
+              : <div className="no-users">No admins yet</div>
+            : everyone.length
+            ? everyone.map((u, i) => (
+                <div key={i} className="user-row">
+                  <div className="avatar">{u.name?.charAt(0) || "U"}</div>
+                  <div className="meta">
+                    <div className="name">{u.name}</div>
+                    <div className="role">Everyone</div>
+                  </div>
+                </div>
+              ))
+            : <div className="no-users">No users yet</div>}
         </div>
       </aside>
+
       <main className="center-panel">
         <div className="search-row">
-          <input className="search-input" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="Paste YouTube link or search song..." onKeyDown={(e) => e.key === "Enter" && handlePlayOrSearch()} />
-          <button className="search-go" onClick={handlePlayOrSearch}>▶</button>
+          <input
+            className="search-input"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder="Paste YouTube link or search song..."
+            onKeyDown={(e) => e.key === "Enter" && handlePlayOrSearch()}
+          />
+          <button className="search-go" onClick={handlePlayOrSearch}>
+            ▶
+          </button>
         </div>
+
         {searchResults.length > 0 && (
           <ul className="suggestions">
             {searchResults.map((it) => (
-              <li key={it.id.videoId || it.id} onClick={() => handleSelectSuggestion(it)}>
-                <div className="s-thumb"><img src={it.snippet?.thumbnails?.default?.url} alt={it.snippet?.title} /></div>
-                <div className="s-meta"><div className="s-title">{it.snippet?.title}</div><div className="s-channel">{it.snippet?.channelTitle}</div></div>
+              <li
+                key={it.id.videoId || it.id}
+                onClick={() => handleSelectSuggestion(it)}
+              >
+                <div className="s-thumb">
+                  <img
+                    src={it.snippet?.thumbnails?.default?.url}
+                    alt={it.snippet?.title}
+                  />
+                </div>
+                <div className="s-meta">
+                  <div className="s-title">{it.snippet?.title}</div>
+                  <div className="s-channel">{it.snippet?.channelTitle}</div>
+                </div>
               </li>
             ))}
           </ul>
         )}
+
         <div className="video-wrapper">
           {currentUrl ? (
-            <ReactPlayer ref={playerRef} url={currentUrl} playing={true} controls width="100%" height="100%" onReady={() => setReady(true)} onError={(e) => console.error("❌ Player Error:", e)} config={{ youtube: { playerVars: { autoplay: 1, modestbranding: 1, rel: 0, enablejsapi: 1 } } }} />
-          ) : <div className="no-video">No video selected</div>}
+            <ReactPlayer
+              ref={playerRef}
+              url={currentUrl}
+              playing={true}
+              controls
+              width="100%"
+              height="100%"
+              onReady={() => setReady(true)}
+              onError={(e) => console.error("❌ Player Error:", e)}
+              config={{
+                youtube: {
+                  playerVars: {
+                    autoplay: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    enablejsapi: 1,
+                  },
+                },
+              }}
+            />
+          ) : (
+            <div className="no-video">No video selected</div>
+          )}
         </div>
       </main>
+
       <aside className="right-panel">
         <div className="chat-title">Live Chat</div>
         <div className="chat-area">
-          {messages.length ? messages.map((m, i) => (
-            <div key={i} className={`chat-msg ${m.sender === userName ? "me" : "other"}`}>
-              <b>{m.sender}</b>: {m.text}
-              <div className="chat-time">{m.time}</div>
-            </div>
-          )) : <div className="no-messages">No messages yet</div>}
+          {messages.length ? (
+            messages.map((m, i) => (
+              <div
+                key={i}
+                className={`chat-msg ${
+                  m.sender === userName ? "me" : "other"
+                }`}
+              >
+                <b>{m.sender}</b>: {m.text}
+                <div className="chat-time">{m.time}</div>
+              </div>
+            ))
+          ) : (
+            <div className="no-messages">No messages yet</div>
+          )}
         </div>
         <div className="chat-input-row">
-          <input placeholder="Message..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} />
+          <input
+            placeholder="Message..."
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
           <button onClick={sendMessage}>Send</button>
         </div>
       </aside>
