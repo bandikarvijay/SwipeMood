@@ -5,7 +5,7 @@ import io from "socket.io-client";
 import "./Room.css";
 
 // ✅ your backend Render domain
-const socket = io("http://localhost:5000");
+const socket = io("https://swipemood.onrender.com");
 const YOUTUBE_API_KEY = "AIzaSyDgtLPxsAnZtdTUNPf7suwB92QLjExbHCA";
 
 export default function Room() {
@@ -35,7 +35,7 @@ export default function Room() {
     const fetchRoom = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/rooms/${roomCode}`
+          `https://swipemood.onrender.com/api/rooms/${roomCode}`
         );
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load room");
